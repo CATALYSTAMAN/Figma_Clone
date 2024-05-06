@@ -5,6 +5,15 @@ import { ReactionEvent } from "./types/type";
 const client = createClient({
   publicApiKey: process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY!,
 
+  resolveUsers: async ({ userIds }) => {
+    // Return an array of user objects with the same length as userIds
+    // Here, we return an empty object for each userId
+    return userIds.map((userId) => ({
+      name: "Unknown",
+      avatar: "default-avatar.png",
+    }));
+  },
+  
   // async resolveUsers({ userIds }) {
   //   // Used only for Comments and Notifications. Return a list of user information
   //   // retrieved from `userIds`. This info is used in comments, mentions etc.
@@ -85,6 +94,12 @@ export type ThreadMetadata = {
   // resolved: boolean;
   // quote: string;
   // time: number;
+
+  resolved: boolean;
+  zIndex: number;
+  time?: number;
+  x: number;
+  y: number;
 };
 
 // Room-level hooks, use inside `RoomProvider`

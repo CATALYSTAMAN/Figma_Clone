@@ -5,7 +5,20 @@ import Live from "@/components/Live";
 import Navbar from "@/components/Navbar";
 import RightSidebar from "@/components/RightSidebar";
 import { useEffect, useRef, useState } from "react";
-import { handleCanvasMouseDown, handleCanvasMouseUp, handleCanvasObjectModified, handleCanvasObjectScaling, handleCanvasSelectionCreated, handleCanvaseMouseMove, handlePathCreated, handleResize, initializeFabric, renderCanvas } from "@/lib/canvas";
+import { 
+    handleCanvasMouseDown, 
+    handleCanvasMouseUp, 
+    handleCanvasObjectModified, 
+    handleCanvasObjectMoving, 
+    handleCanvasObjectScaling, 
+    handleCanvasSelectionCreated, 
+    handleCanvasZoom, 
+    handleCanvaseMouseMove, 
+    handlePathCreated, 
+    handleResize, 
+    initializeFabric, 
+    renderCanvas 
+} from "@/lib/canvas";
 import { ActiveElement, Attributes } from "@/types/type";
 import { useMutation, useRedo, useStorage, useUndo } from "@/liveblocks.config";
 import { defaultNavElement } from "@/constants";
@@ -50,10 +63,15 @@ export default function Page() {
     // If the store doesn't exist or is empty, return true
     if (!canvasObjects || canvasObjects.size === 0) 
     return true; // Return an array with length 1 indicating success
-    
-    for (const [key, value] of canvasObjects.entries()) {
-      canvasObjects.delete(key)
-    }
+  
+    // Convert canvasObjects to an array of keys
+    const shapeIds = Array.from(canvasObjects.keys());
+  
+    // Delete all the shapes from the store
+    shapeIds.forEach(shapeId => {
+      canvasObjects.delete(shapeId);
+    });
+  
     // Return true if the store is empty
     return [canvasObjects.size === 0]; // Return an array with length 1 indicating success
   }, []);
@@ -86,7 +104,9 @@ export default function Page() {
         case "image":
           // trigger the click event on the input element which opens the file dialog
           imageInputRef.current?.click();
+
           isDrawing.current = false;
+          
           if (fabricRef.current) {
           // disable the drawing mode of canvas
           fabricRef.current.isDrawingMode = false;
@@ -115,8 +135,8 @@ export default function Page() {
 
   useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
-    
-    canvas.on("mouse:down", (options: any) => {
+  
+    canvas.on("mouse:down", (options) => {
       handleCanvasMouseDown({
         options,
         canvas,
@@ -125,8 +145,8 @@ export default function Page() {
         selectedShapeRef,
       });
     });
-
-    canvas.on("mouse:move", (options: any) => {
+  
+    canvas.on("mouse:move", (options) => {
       handleCanvaseMouseMove({
         options,
         canvas,
@@ -136,7 +156,7 @@ export default function Page() {
         syncShapeInStorage,
       });
     });
-
+  
     canvas.on("mouse:up", () => {
       handleCanvasMouseUp({
         canvas,
@@ -148,62 +168,67 @@ export default function Page() {
         activeObjectRef,
       });
     });
-
-    canvas.on("object:modified", (options: any) => {
+  
+    canvas.on("object:modified", (options) => {
       handleCanvasObjectModified({
         options,
         syncShapeInStorage,
       });
     });
-
-    canvas.on("selection:created", (options: any) => {
+  
+    canvas.on("selection:created", (options) => {
       handleCanvasSelectionCreated({
         options,
         isEditingRef,
         setElementAttributes,
       });
     });
-
+  
     canvas.on("object:scaling", (options) => {
       handleCanvasObjectScaling({
-        options, setElementAttributes
+        options,
+        setElementAttributes
       });
     });
-
+  
     canvas.on("path:created", (options) => {
       handlePathCreated({
         options,
         syncShapeInStorage,
       });
     });
+  
+    canvas?.on("object:moving", (options) => {
+        handleCanvasObjectMoving({
+          options,
+        });
+      });
+  
+    canvas.on("mouse:wheel", (options) => {
+        handleCanvasZoom({
+        options,
+        canvas,
+        });
+      });
     
     window.addEventListener("resize", () => {
       handleResize({
         canvas: fabricRef.current,
       });
     });
-
-    window.addEventListener("keydown", (e: any) =>
-    handleKeyDown({
-      e,
-      canvas: fabricRef.current,
-      undo,
-      redo,
-      syncShapeInStorage,
-      deleteShapeFromStorage,
-    })
-  );
-
-    return () => {
-      canvas.dispose();
-
-      window.removeEventListener("resize", () => {
-        handleResize({
-          canvas: null,
-        });
+  
+    const handleKeyDownEvent = (e: KeyboardEvent) => {
+      handleKeyDown({
+        e,
+        canvas: fabricRef.current,
+        undo,
+        redo,
+        syncShapeInStorage,
+        deleteShapeFromStorage,
       });
-
-      window.removeEventListener("keydown", (e) =>
+    };
+  
+    window.addEventListener("keydown", (e) =>
       handleKeyDown({
         e,
         canvas: fabricRef.current,
@@ -213,10 +238,27 @@ export default function Page() {
         deleteShapeFromStorage,
       })
     );
-
-    }
-
-  }, [])
+      
+    return () => {
+      canvas.dispose();
+  
+      window.removeEventListener("resize", () => {
+        handleResize({
+          canvas: null,
+        });
+      });
+  
+      window.removeEventListener("keydown", (e) => handleKeyDown({
+        e,
+        canvas: fabricRef.current,
+        undo,
+        redo,
+        syncShapeInStorage,
+        deleteShapeFromStorage,
+      }));
+    };
+  }, [canvasRef, undo, redo, syncShapeInStorage, deleteShapeFromStorage]);
+  
 
   useEffect(() => {
     renderCanvas({
@@ -244,8 +286,11 @@ export default function Page() {
     /> 
 
     <section className="flex h-full flex-row">
+    
     <LeftSidebar allShapes={Array.from(canvasObjects)} />
+    
     <Live canvasRef={canvasRef} undo={undo} redo={redo}/>
+    
     <RightSidebar 
       elementAttributes={elementAttributes}
       setElementAttributes={setElementAttributes}
@@ -253,8 +298,6 @@ export default function Page() {
       isEditingRef={isEditingRef}
       activeObjectRef={activeObjectRef}
       syncShapeInStorage={syncShapeInStorage}
-
-
     />
     </section>
     </main>

@@ -26,6 +26,7 @@ type Props = {
 const Live = ({ canvasRef, undo, redo }: Props) => {
 
     const [{ cursor }, updateMyPresence] = useMyPresence();
+
     const [cursorState, setCursorState] = useState<CursorState>({
         mode: CursorMode.Hidden,
     });
@@ -98,7 +99,6 @@ const Live = ({ canvasRef, undo, redo }: Props) => {
     const setReaction = useCallback((reaction: string) => {
         setCursorState({ mode: CursorMode.Reaction, reaction, isPressed: false });
     },[]);
-
 
     const broadcast = useBroadcastEvent();
 
@@ -200,7 +200,8 @@ const Live = ({ canvasRef, undo, redo }: Props) => {
      )}
 
         {cursorState.mode === CursorMode.ReactionSelector && (
-        <ReactionSelector setReaction={setReaction}
+        <ReactionSelector 
+            setReaction={setReaction}
         />
         )}
 

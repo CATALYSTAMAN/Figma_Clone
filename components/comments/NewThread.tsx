@@ -26,8 +26,9 @@ type Props = {
 
 export const NewThread = ({ children }: Props) => {
   // set state to track if we're placing a new comment or not
-  const [creatingCommentState, setCreatingCommentState] = useState<
-    "placing" | "placed" | "complete"
+  const [creatingCommentState, 
+    setCreatingCommentState] = 
+    useState< "placing" | "placed" | "complete"
   >("complete");
 
   /**

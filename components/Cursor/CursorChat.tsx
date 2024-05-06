@@ -2,8 +2,6 @@ import CursorSVG from '@/public/assets/CursorSVG'
 import { CursorChatProps, CursorMode } from '@/types/type'
 import React from 'react'
 
-
-
 const CursorChat = ({
   cursor,
   cursorState,
@@ -63,7 +61,7 @@ const CursorChat = ({
                 cursorState.previousMessage ? "" : "Type a message..."
               }
               value={cursorState.message}
-              maxLength={100}
+              maxLength={50}
             />
           </div>
       </>

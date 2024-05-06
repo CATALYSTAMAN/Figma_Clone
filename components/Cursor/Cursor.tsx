@@ -21,7 +21,7 @@ const Cursor = ({ color, x, y, message }: Props) => (
         style={{ backgroundColor: color, borderRadius: 20 }}
       >
         <p className="whitespace-nowrap text-sm leading-relaxed text-white">
-          {/* {message} */}
+          {message}
         </p>
       </div>
     )}
